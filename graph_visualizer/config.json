@@ -1,0 +1,7 @@
+{
+  "package_name": "A",
+  "target_package": "B",
+  "repo_url": "file://test_repo.json",
+  "test_mode": true,
+  "max_depth": 3
+}
