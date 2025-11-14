@@ -67,41 +67,6 @@ def build_graph(start, config):
                 stack.append((dep, depth + 1))
     return graph
 
-# === Этап 4: обратные зависимости ===
-def build_reverse_graph(config):
-    """Строит обратный граф из test_repo.json (только в test_mode)"""
-    if not config["test_mode"]:
-        return {}
-
-    try:
-        with open("test_repo.json", "r", encoding="utf-8") as f:
-            full = json.load(f)
-    except Exception as e:
-        print(f"Ошибка при чтении test_repo.json: {e}")
-        sys.exit(1)
-
-    rev = {}
-    for pkg, deps in full.items():
-        for dep in deps:
-            rev.setdefault(dep, []).append(pkg)
-    return rev
-
-def get_reverse_deps(target, config):
-    rev = build_reverse_graph(config)
-    return rev.get(target, [])
-
-# === Этап 5: Mermaid-генератор ===
-def generate_mermaid(graph):
-    lines = ["graph TD"]
-    seen = set()
-    for pkg, deps in graph.items():
-        for dep in deps:
-            edge = f"{pkg} --> {dep}"
-            if edge not in seen:
-                lines.append(f"    {edge}")
-                seen.add(edge)
-    return "\n".join(lines)
-
 # === ЗАПУСК ===
 if __name__ == "__main__":
     config = load_config()
@@ -125,33 +90,3 @@ if __name__ == "__main__":
     for pkg, deps in graph.items():
         print(f"  {pkg} → {deps}")
 
-    # === Этап 4: обратные зависимости (если указан target_package) ===
-    if "target_package" in config:
-        rev = get_reverse_deps(config["target_package"], config)
-        print(f"\nЭтап 4: обратные зависимости для '{config['target_package']}':")
-        if rev:
-            for p in rev:
-                print(f"  - {p}")
-        else:
-            print("  (нет)")
-    else:
-        print("\ntarget_package не указан — этап 4 пропущен.")
-
-    # === Этап 5: визуализация Mermaid ===
-    print("ЭТАП 5: ВИЗУАЛИЗАЦИЯ (Mermaid)")
-
-    mermaid = generate_mermaid(graph)
-    print("\nMermaid-код:")
-    print("```mermaid")
-    print(mermaid)
-    print("```")
-
-    # Примеры для трёх пакетов
-    test_pkgs = ["A", "B", "G"]
-    print("\nПримеры визуализации для трёх пакетов:")
-    for pkg in test_pkgs:
-        g = build_graph(pkg, {**config, "max_depth": 3})
-        print(f"\nПакет: {pkg}")
-        print("```mermaid")
-        print(generate_mermaid(g))
-        print("```")
